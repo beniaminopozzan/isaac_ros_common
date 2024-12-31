@@ -226,15 +226,24 @@ fi
 # Map host's display socket to docker
 DOCKER_ARGS+=("-v /tmp/.X11-unix:/tmp/.X11-unix")
 DOCKER_ARGS+=("-v $HOME/.Xauthority:/home/admin/.Xauthority:rw")
-DOCKER_ARGS+=("-e DISPLAY")
+#DOCKER_ARGS+=("-e DISPLAY")
 DOCKER_ARGS+=("-e NVIDIA_VISIBLE_DEVICES=all")
 DOCKER_ARGS+=("-e NVIDIA_DRIVER_CAPABILITIES=all")
 DOCKER_ARGS+=("-e FASTRTPS_DEFAULT_PROFILES_FILE=/usr/local/share/middleware_profiles/rtps_udp_profile.xml")
 DOCKER_ARGS+=("-e ROS_DOMAIN_ID")
 DOCKER_ARGS+=("-e USER")
 DOCKER_ARGS+=("-e ISAAC_ROS_WS=/workspaces/isaac_ros-dev")
+DOCKER_ARGS+=("-e HOST_USER_UID=`id -u`")
+DOCKER_ARGS+=("-e HOST_USER_GID=`id -g`")
+
+# Forward SSH Agent to container if the ssh agent is active.
+if [[ -n $SSH_AUTH_SOCK ]]; then
+    DOCKER_ARGS+=("-v $SSH_AUTH_SOCK:/ssh-agent")
+    DOCKER_ARGS+=("-e SSH_AUTH_SOCK=/ssh-agent")
+fi
 
 if [[ $PLATFORM == "aarch64" ]]; then
+    #DOCKER_ARGS+=("-e NVIDIA_VISIBLE_DEVICES=nvidia.com/gpu=all,nvidia.com/pva=all")
     DOCKER_ARGS+=("-v /usr/bin/tegrastats:/usr/bin/tegrastats")
     DOCKER_ARGS+=("-v /tmp/:/tmp/")
     DOCKER_ARGS+=("-v /usr/lib/aarch64-linux-gnu/tegra:/usr/lib/aarch64-linux-gnu/tegra")
@@ -242,6 +251,9 @@ if [[ $PLATFORM == "aarch64" ]]; then
     DOCKER_ARGS+=("--pid=host")
     DOCKER_ARGS+=("-v /usr/share/vpi3:/usr/share/vpi3")
     DOCKER_ARGS+=("-v /dev/input:/dev/input")
+    DOCKER_ARGS+=("-v /dev:/dev")
+    DOCKER_ARGS+=("-v /var/nvidia/nvcam/settings/:/var/nvidia/nvcam/settings/")
+    DOCKER_ARGS+=("-v /etc/systemd/system/zed_x_daemon.service:/etc/systemd/system/zed_x_daemon.service")
 
     # If jtop present, give the container access
     if [[ $(getent group jtop) ]]; then
@@ -279,12 +291,12 @@ fi
 docker run -it --rm \
     --privileged \
     --network host \
+    --ipc=host \
     ${DOCKER_ARGS[@]} \
     -v $ISAAC_ROS_DEV_DIR:/workspaces/isaac_ros-dev \
     -v /etc/localtime:/etc/localtime:ro \
     --name "$CONTAINER_NAME" \
     --runtime nvidia \
-    --user="admin" \
     --entrypoint /usr/local/bin/scripts/workspace-entrypoint.sh \
     --workdir /workspaces/isaac_ros-dev \
     $BASE_NAME \

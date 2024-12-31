@@ -18,6 +18,7 @@ ARG USER_GID=1000
 RUN --mount=type=cache,target=/var/cache/apt \
 apt-get update && apt-get install -y \
         sudo \
+        gosu \
         udev
 
 # Reuse triton-server user as 'admin' user if exists
