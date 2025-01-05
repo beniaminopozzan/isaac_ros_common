@@ -247,7 +247,9 @@ if [[ $PLATFORM == "aarch64" ]]; then
     DOCKER_ARGS+=("-v /usr/src/jetson_multimedia_api:/usr/src/jetson_multimedia_api")
     DOCKER_ARGS+=("--pid=host")
     DOCKER_ARGS+=("-v /usr/share/vpi3:/usr/share/vpi3")
-    DOCKER_ARGS+=("-v /dev/input:/dev/input")
+    DOCKER_ARGS+=("-v /dev/:/dev/")
+    DOCKER_ARGS+=("-v /var/nvidia/nvcam/settings/:/var/nvidia/nvcam/settings/")
+    DOCKER_ARGS+=("-v /etc/systemd/system/zed_x_daemon.service:/etc/systemd/system/zed_x_daemon.service")
 
     # If jtop present, give the container access
     if [[ $(getent group jtop) ]]; then
